@@ -58,7 +58,7 @@ internal final class corkModel {
                    os_log("BleService is %s", log: Log.model, type: .info, payload.status.description)
                    switch payload.status {
                        case .onLine:
-                           self.bleService.attachPeripheral(suuid: self.primaryService, forceScan: true)
+                           self.bleService.attachPeripheral(suuid: self.primaryService, forceScan: false)
                             //print("System is on-live from setupSub....")
                        case .offLine:
                            break

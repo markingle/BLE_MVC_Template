@@ -74,7 +74,7 @@ let restoreIdKey = "MyBluetoothManager"
     
 // MARK: - Core Bluetooth service IDs
 
-class BLE_Controller: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate{
+internal final class BLE_Controller: NSObject, ObservableObject, CBCentralManagerDelegate, CBPeripheralDelegate {
     
     static let shared = BLE_Controller()
     
@@ -89,22 +89,29 @@ class BLE_Controller: NSObject, ObservableObject, CBCentralManagerDelegate, CBPe
     //}
     
     // Last attached peripheral
-        private struct LastAttachedPeripheral: Codable {
-            var peripherals: UUID
-        }
+    private struct AttachedPeripherals: Codable {
+        var peripherals: UUID
+        var suuidData: Data
+    }
     
     //private var peripheralArray : [LastAttachedPeripheral] = []
     
-    private var peripheralArray : Array<LastAttachedPeripheral> = Array()
+    private var peripheralArray : Array<AttachedPeripherals> = Array()
     
     private let kLastAttachedPeripheralKey = "lap"
     private var UD: UserDefaults
     
     private var centralManager: CBCentralManager?
+    var WeightScale: CBPeripheral?
+    var RED: CBPeripheral?
+    var GREEN: CBPeripheral?
+    var BLACK: CBPeripheral?
+    var YELLO: CBPeripheral?
+    var WHITE: CBPeripheral?
+    //var BLUE: CBPeripheral?
     
     var connectedPeripheral: CBPeripheral?
     var discoveredPeripheral: CBPeripheral?
-    var WHITE: CBPeripheral?
     var peripherals: [CBPeripheral] = []
     
     // Queues
@@ -188,28 +195,29 @@ class BLE_Controller: NSObject, ObservableObject, CBCentralManagerDelegate, CBPe
         //central.stopScan()
         //print("didDiscover completed...")
         //print("Cork name ", peripheral)
+        
         peripherals.append(peripheral)
         discoveredPeripheral = peripherals[PeripheralCount]
         peripheral.delegate = self
-        //print("Peri Count = ", PeripheralCount)
-        //print("name = ", peripherals[PeripheralCount].name ?? "No Peripheral Name")
+        print("Peri Count = ", PeripheralCount)
+        print("name = ", peripherals[PeripheralCount].name ?? "No Peripheral Name")
+        
+        //>>>>>>> Hard code the peripheral count for now.  Set in User Defaults later on <<<<<<<<<<<<<<
         if PeripheralCount == 4 {
             centralManager?.stopScan()
             cmdQueue.async {self.handleEvent(event: .ScanSuccess) }
         }
         PeripheralCount = PeripheralCount + 1
+        
     }//.......END func didDiscover.......
     
     func centralManager(_ central: CBCentralManager, didConnect peripherals: CBPeripheral) {
         os_log("In didConnect: %s", log: Log.ble, type: .info, peripherals.identifier.uuidString)
 
         cmdQueue.async { self.handleEvent(event: .ConnectSuccess) }
-       //print("Stopping Scan for Peripherals")
-       //centralManager?.stopScan()
+        //print("Stopping Scan for Peripherals")
+        //centralManager?.stopScan()
         
-        // STEP 8: look for services of interest on peripheral
-        
-       
         //print("peripheral", peripherals)
         // Remember the ID for startup reconnecting.
         //UserDefaults.standard.set(peripherals.identifier.uuidString,forKey: peripheralIdDefaultsKey)
@@ -218,14 +226,15 @@ class BLE_Controller: NSObject, ObservableObject, CBCentralManagerDelegate, CBPe
         //let peripheralIdStr = UserDefaults.standard.object(forKey: peripheralIdDefaultsKey)
         //let peripheralId = UUID(uuidString: peripheralIdStr as! String)
         //print("peripheralId is ...", peripheralId ?? "No UD Peri")
-    }
+        
+    }//.......END func didConnect.......
     
     func centralManager(_ central: CBCentralManager, didFailToConnect peripheral: CBPeripheral, error: Error?) {
         os_log("In didFailToConnect: %s", log: Log.ble, type: .info, peripheral.identifier.uuidString)
 
         cmdQueue.async { self.handleEvent(event: .ConnectFail) }
             
-        }
+    } //.......END func didFailToConnect.......
 
     func centralManager(_ central: CBCentralManager, didDisconnectPeripheral peripheral: CBPeripheral, error: Error?) {
         os_log("In didFailToConnect: %s", log: Log.ble, type: .info, peripheral.identifier.uuidString)
@@ -240,7 +249,7 @@ class BLE_Controller: NSObject, ObservableObject, CBCentralManagerDelegate, CBPe
             cmdQueue.async { self.handleEvent(event: .DisconnectedWithError) }
         }
         
-    }
+    } //.......END func didDisconnectPeripheral.......
 
 
 // MARK: - Private functions
@@ -285,101 +294,31 @@ private func handleEvent(event: BEvent) {
     }
 }
 
-private func setLastAttachedPeripheral(defaults: UserDefaults, peripheral: CBPeripheral) {
+    private func setLastAttachedPeripheral(defaults: UserDefaults, peripheral: CBPeripheral, suuid: CBUUID) {
     
-    let cork = LastAttachedPeripheral(peripherals: peripheral.identifier)
+    let cork = AttachedPeripherals(peripherals: peripheral.identifier, suuidData: suuid.data )
     peripheralArray.append(cork)
-    
-   
-  
-    print("corks before encoding .. ", peripheralArray)
-    
-    
-    //let per = centralManager?.retrievePeripherals(withIdentifiers: [peripheralArray]).first
-    
-    //print("peri Array", peripheralArray[0])
+    //print("corks before encoding .. ", peripheralArray)
     
     do  {
         let encoder = JSONEncoder()
-        
         let data = try encoder.encode(peripheralArray)
-        
         defaults.set(data, forKey: kLastAttachedPeripheralKey)
     } catch {
         print("Unable to encode array (\(error))")
     }
-
-    
-    /*if let data = defaults.data(forKey: kLastAttachedPeripheralKey) {
-        do {
-            let decoder = JSONDecoder()
-            
-            let corks = try decoder.decode([LastAttachedPeripheral].self, from: data)
-            print("Peripheral: ", corks.last?.peripherals ?? "No Corks in UD")
-        } catch {
-            print("Unable to decode array (\(error))")
-        }
-     
-    }*/
-    
-    var retValue: Array<LastAttachedPeripheral>? = nil
-    
-    
-    if let peri = defaults.object(forKey: kLastAttachedPeripheralKey) as? Data
-    {
-        retValue = try? JSONDecoder().decode([LastAttachedPeripheral].self, from: peri)
-        print("retValue = ", retValue as Any)
-        let per = centralManager?.retrievePeripherals(withIdentifiers: [retValue]).map {$0.peripheral}
-        
-    }
-  
-    
-   
-    
-    
-
-    //if let data = defaults.object(forKey: kLastAttachedPeripheralKey) {
-    //    do {
-    //        let decoder = JSONDecoder()
-    //        let corks2 = try? decoder.decode([LastAttachedPeripheral].self, from: strings)
-    //        print("Corks AKA Peripherals ... ", corks2 ?? "No Peri in UD")
-    //    }
-    //}
-    
-    //if let data2 = defaults.data(forKey: kLastAttachedPeripheralKey) {
-    //    if let corks2 = try? PropertyListDecoder().decode([LastAttachedPeripheral].self, from: data2) {
-     //       print("Corks retrieved > ", corks2)
-     //   }
-    //}
-    
-    //let UD_String = defaults.object(forKey: kLastAttachedPeripheralKey)
-    //print("UD > ", UD_String ?? "NO UD Peri")
 }
-
-/*private func getLastAttachedPeripheral(defaults: UserDefaults) -> LastAttachedPeripheral? {
-    let retValue: LastAttachedPeripheral? = nil
     
-    let data = defaults.data(forKey: kLastAttachedPeripheralKey)!
-        do {
-            let decoder = JSONDecoder()
-            
-            let retValue = try decoder.decode([LastAttachedPeripheral].self, from: data)
-            print("GLAP - Peripheral: ", retValue )
-        } catch {
-            print("Unable to decode array (\(error))")
-        }
-    return retValue
-}*/
-
-    private func getPeripherals(defaults: UserDefaults) -> [LastAttachedPeripheral]? {
-        var retValue: [LastAttachedPeripheral]? = []
+    private func getPeripherals(defaults: UserDefaults) -> [AttachedPeripherals]? {
+        var retValue: Array<AttachedPeripherals>? = nil
+        
         
         if let data = defaults.data(forKey: kLastAttachedPeripheralKey) {
             let decoder = JSONDecoder()
-            retValue = try? decoder.decode([LastAttachedPeripheral].self, from: data)
+            retValue = try? decoder.decode([AttachedPeripherals].self, from: data)
             print("GLAP - Peripheral: ", retValue ?? "No Corks in UD" )
         }
-    return retValue
+        return retValue
 }
     
 
@@ -388,11 +327,11 @@ private func setLastAttachedPeripheral(defaults: UserDefaults, peripheral: CBPer
 //    defaults.array(data, forKey: kLastAttachedPeripheralKey)
 //    }
 
-private func load(defaults: UserDefaults) -> [LastAttachedPeripheral] {
+private func load(defaults: UserDefaults) -> [AttachedPeripherals] {
     guard let encodedData = defaults.object(forKey: kLastAttachedPeripheralKey) as? [Data] else {
             return []
         }
-        return encodedData.map { try! JSONDecoder().decode(LastAttachedPeripheral.self, from: $0) }
+        return encodedData.map { try! JSONDecoder().decode(AttachedPeripherals.self, from: $0) }
     }
     
     
@@ -405,7 +344,7 @@ func attachPeripheral(suuid: CBUUID, forceScan: Bool = false) {
     //
     attachingWith = (nil, suuid, false)
     //cmdQueue.async {self.handleEvent(event: forceScan ? .Retrieve : .Scan) }
-    cmdQueue.async {self.handleEvent(event: forceScan ? .Scan : .Retrieve) }
+    cmdQueue.async {self.handleEvent(event: forceScan ? .Scan : .Retrieve) }  //if TRUE then Scan, if FALSE then Retrieve
 }
     
 func read(suuid: CBUUID, cuuid: CBUUID) {
@@ -459,30 +398,86 @@ func performNotifyAttached(thisEvent: BEvent, thisState: BState) {
     os_log("In performNotifyAttached, event: %s state: %s", log: Log.ble, type: .info, thisEvent.description, thisState.description)
 
     attachingWith.isAttached = true
-    //if let per = attachingWith.peripheral, let suuid = attachingWith.suuid {
-    //let suuid = attachingWith.suuid                                                                                      //<<<<<<<<< THIS NEEDS ERROR CONTROL
-    for peripheral in peripherals {
-        setLastAttachedPeripheral(defaults: UD, peripheral: peripheral)
-        //setLastAttachedPeripheral(defaults: UD, peripheral: per, suuid: suuid)
-    
-    }
+    if let per = peripherals.first, let suuid = attachingWith.suuid {
+        for peripheral in peripherals {
+            setLastAttachedPeripheral(defaults: UD, peripheral: peripheral, suuid: suuid)
+            print("Setting Peri = ", per)
+            //setLastAttachedPeripheral(defaults: UD, peripheral: per, suuid: suuid)
+        
+        }
+    }                                                                                       //<<<<<<<<< THIS NEEDS ERROR CONTROL
     nc.post(name: .bleStatus, object: BleStatusPayload(status: .ready))
 }
 
-func performRetrieve(event: BEvent, state: BState) throws {
-    os_log("In performRetrieve, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
-    //var lap: [CBPeripheral] = []
-    guard let cm = centralManager, let suuid = attachingWith.suuid else {
-        throw BleError.UninitialisedProperty }
-    
-    //let peri = UserDefaults.standard.data(forKey: kLastAttachedPeripheralKey) as? [UUID]
-    //let per = cm.retrievePeripherals(withIdentifiers: peri)
-    
-    //let uuid = UUID(uuidString: "ASDFASDFASDF-ASDF-ASDF-ASDFASDFASDF")
-    //let per = cm.retrievePeripherals(withIdentifiers: [uuid]).first
-    
+    func performRetrieve(event: BEvent, state: BState) throws {
+        os_log("In performRetrieve, event: %s state %s", log: Log.ble, type: .info, event.description, state.description)
+        guard let cm = centralManager, let suuid = attachingWith.suuid else {
+                    throw BleError.UninitialisedProperty }
+   
+       if let last_Peripherals = getPeripherals(defaults: UD) , CBUUID(data: last_Peripherals[0].suuidData ) == suuid {  // CHECKING FOR JUST ONE PERIPHERAL WITH THE SERVICE ID DOESNT MAKE SENSE....BUT GO WITH IT FOR NOW.....
+            os_log("Retrieving...", log: Log.ble, type: .info)
+           let previouslyConnected = cm.retrievePeripherals(withIdentifiers: last_Peripherals.map {$0.peripherals} as! [UUID])
+           peripherals = previouslyConnected
+           
+           for peri in peripherals {
+               
+               switch peri.name {
+               
+               case "RED" :
+                   RED = peri
+                   RED?.delegate = self
+                   //connect(peripheral: RED!)
+                   cm.connect(RED!, options: nil)
+                   print("RED Connected!!")
+                   
+               case "GREEN" :
+                   GREEN = peri
+                   GREEN?.delegate = self
+                   //connect(peripheral: GREEN!)
+                   cm.connect(GREEN!, options: nil)
+                   print("GREEN Connected!!")
+                   
+               case "WHITE" :
+                   WHITE = peri
+                   WHITE?.delegate = self
+                   //connect(peripheral: WHITE!)
+                   cm.connect(WHITE!, options: nil)
+                   print("WHITE Connected!!")
+                   
+               case "YELLO" :
+                   YELLO = peri
+                   YELLO?.delegate = self
+                   //connect(peripheral: YELLO!)
+                   cm.connect(YELLO!, options: nil)
+                   print("YELLO Connected!!")
+
+               case "BLACK" :
+                   BLACK = peri
+                   BLACK?.delegate = self
+                   //connect(peripheral: BLACK!)
+                   cm.connect(BLACK!, options: nil)
+                   print("BLACK Connected!!")
+            
+               default:
+                   print("NO CORK CONNECTED.....")
+               }
+           }
+        }
+        else {
+        cmdQueue.async {self.handleEvent(event: .RetrieveFail)}
+        }
     }
+    
+    /*func connect(peripheral: CBPeripheral) {
+        // Connect!
+        // Note: We're retaining the peripheral in the state enum because Apple
+        // says: "Pending attempts are cancelled automatically upon
+        // deallocation of peripheral"
+        print("Connecting to peripheral ", peripheral)
+        centralManager?.connect(peripheral, options: nil)
+    }*/
 }
+
     
 
 
