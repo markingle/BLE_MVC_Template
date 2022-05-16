@@ -213,19 +213,11 @@ internal final class BLE_Controller: NSObject, ObservableObject, CBCentralManage
     
     func centralManager(_ central: CBCentralManager, didConnect peripherals: CBPeripheral) {
         os_log("In didConnect: %s", log: Log.ble, type: .info, peripherals.identifier.uuidString)
-
-        cmdQueue.async { self.handleEvent(event: .ConnectSuccess) }
-        //print("Stopping Scan for Peripherals")
-        //centralManager?.stopScan()
         
-        //print("peripheral", peripherals)
-        // Remember the ID for startup reconnecting.
-        //UserDefaults.standard.set(peripherals.identifier.uuidString,forKey: peripheralIdDefaultsKey)
-        //UserDefaults.standard.synchronize()
-        
-        //let peripheralIdStr = UserDefaults.standard.object(forKey: peripheralIdDefaultsKey)
-        //let peripheralId = UUID(uuidString: peripheralIdStr as! String)
-        //print("peripheralId is ...", peripheralId ?? "No UD Peri")
+        if PeripheralCount == 4 {
+            cmdQueue.async { self.handleEvent(event: .ConnectSuccess) }
+        }
+        PeripheralCount = PeripheralCount + 1
         
     }//.......END func didConnect.......
     
@@ -428,35 +420,35 @@ func performNotifyAttached(thisEvent: BEvent, thisState: BState) {
                    RED?.delegate = self
                    //connect(peripheral: RED!)
                    cm.connect(RED!, options: nil)
-                   print("RED Connected!!")
+                   print("RED Connecting!!")
                    
                case "GREEN" :
                    GREEN = peri
                    GREEN?.delegate = self
                    //connect(peripheral: GREEN!)
                    cm.connect(GREEN!, options: nil)
-                   print("GREEN Connected!!")
+                   print("GREEN Connecting!!")
                    
                case "WHITE" :
                    WHITE = peri
                    WHITE?.delegate = self
                    //connect(peripheral: WHITE!)
                    cm.connect(WHITE!, options: nil)
-                   print("WHITE Connected!!")
+                   print("WHITE Connecting!!")
                    
                case "YELLO" :
                    YELLO = peri
                    YELLO?.delegate = self
                    //connect(peripheral: YELLO!)
                    cm.connect(YELLO!, options: nil)
-                   print("YELLO Connected!!")
+                   print("YELLO Connecting!!")
 
                case "BLACK" :
                    BLACK = peri
                    BLACK?.delegate = self
                    //connect(peripheral: BLACK!)
                    cm.connect(BLACK!, options: nil)
-                   print("BLACK Connected!!")
+                   print("BLACK Connecting!!")
             
                default:
                    print("NO CORK CONNECTED.....")
@@ -467,15 +459,6 @@ func performNotifyAttached(thisEvent: BEvent, thisState: BState) {
         cmdQueue.async {self.handleEvent(event: .RetrieveFail)}
         }
     }
-    
-    /*func connect(peripheral: CBPeripheral) {
-        // Connect!
-        // Note: We're retaining the peripheral in the state enum because Apple
-        // says: "Pending attempts are cancelled automatically upon
-        // deallocation of peripheral"
-        print("Connecting to peripheral ", peripheral)
-        centralManager?.connect(peripheral, options: nil)
-    }*/
 }
 
     
