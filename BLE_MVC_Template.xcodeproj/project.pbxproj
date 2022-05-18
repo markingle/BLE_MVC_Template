@@ -9,7 +9,7 @@
 /* Begin PBXBuildFile section */
 		0A5D250327E6C03300F8380A /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D250227E6C03300F8380A /* AppDelegate.swift */; };
 		0A5D250527E6C03300F8380A /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D250427E6C03300F8380A /* SceneDelegate.swift */; };
-		0A5D250727E6C03300F8380A /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D250627E6C03300F8380A /* ViewController.swift */; };
+		0A5D250727E6C03300F8380A /* RootViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0A5D250627E6C03300F8380A /* RootViewController.swift */; };
 		0A5D250A27E6C03300F8380A /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5D250827E6C03300F8380A /* Main.storyboard */; };
 		0A5D250C27E6C03500F8380A /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0A5D250B27E6C03500F8380A /* Assets.xcassets */; };
 		0A5D250F27E6C03500F8380A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 0A5D250D27E6C03500F8380A /* LaunchScreen.storyboard */; };
@@ -21,7 +21,7 @@
 		0A5D24FF27E6C03300F8380A /* BLE_MVC_Template.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BLE_MVC_Template.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		0A5D250227E6C03300F8380A /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		0A5D250427E6C03300F8380A /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
-		0A5D250627E6C03300F8380A /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		0A5D250627E6C03300F8380A /* RootViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RootViewController.swift; sourceTree = "<group>"; };
 		0A5D250927E6C03300F8380A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		0A5D250B27E6C03500F8380A /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		0A5D250E27E6C03500F8380A /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
@@ -64,7 +64,7 @@
 				0A5D250427E6C03300F8380A /* SceneDelegate.swift */,
 				0A5D251627E6C06300F8380A /* BLE_Controller.swift */,
 				0A5D251827EAAC3900F8380A /* Corks_Model.swift */,
-				0A5D250627E6C03300F8380A /* ViewController.swift */,
+				0A5D250627E6C03300F8380A /* RootViewController.swift */,
 				0A5D250827E6C03300F8380A /* Main.storyboard */,
 				0A5D250B27E6C03500F8380A /* Assets.xcassets */,
 				0A5D250D27E6C03500F8380A /* LaunchScreen.storyboard */,
@@ -144,7 +144,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				0A5D250727E6C03300F8380A /* ViewController.swift in Sources */,
+				0A5D250727E6C03300F8380A /* RootViewController.swift in Sources */,
 				0A5D251727E6C06300F8380A /* BLE_Controller.swift in Sources */,
 				0A5D251927EAAC3A00F8380A /* Corks_Model.swift in Sources */,
 				0A5D250327E6C03300F8380A /* AppDelegate.swift in Sources */,

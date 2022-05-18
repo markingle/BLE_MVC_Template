@@ -12,6 +12,7 @@ import os
 private let Cork_Service_CBUUID = CBUUID(string: "4FAFC201-1FB5-459E-8FCC-C5C9C3319141")
 
 private let Peripheral1_UUID = UUID(uuidString: "4FAFC201-1FB5-459E-8FCC-C5C9C3319141")
+
 private let Peripheral2_UUID = UUID(uuidString: "4FAFC201-1FB5-459E-8FCC-C5C9C3319141")
 
 internal let nc = NotificationCenter.default        // Application scope
@@ -82,19 +83,12 @@ internal final class BLE_Controller: NSObject, ObservableObject, CBCentralManage
     
     private let peripheralIdDefaultsKey = "MyBluetoothManagerPeripheralId"
     
-    // Last attached peripheral
-    //private struct LastAttachedPeripheral: Codable {
-    //    var peripheral: UUID
-    //    var suuidData: Data
-    //}
-    
-    // Last attached peripheral
+    // Last peripherals that were attached
     private struct AttachedPeripherals: Codable {
         var peripherals: UUID
         var suuidData: Data
     }
     
-    //private var peripheralArray : [LastAttachedPeripheral] = []
     
     private var peripheralArray : Array<AttachedPeripherals> = Array()
     
@@ -136,13 +130,13 @@ internal final class BLE_Controller: NSObject, ObservableObject, CBCentralManage
         super.init()
         setupStateMaps()
         machine = Machine.init(actionMap: actionMap, stateActionMap: stateActionMap, errorMap: errorMap)
+        
         //Apple recommends checking to retrieve peripherals that may already exist....then falling back to scanning if retrieve fails
         // - Retrieve process will query the bluetooth cache.  Mainly to see if the core bluetooth is already aware of the peripheral
         // - The UUID for the peripheral is passed to core bluetooth and core bluetooth syncronously returns a CBPeripheral instance or NIL.  If core bluetooth already knows about the peri then we can attempt to connect to it.
         // - The peripheral may or may not be powered up so we need to connect to it to find out
         // - Successful connect. then we go to that attached state and start work......if it fails we need to fall back to a scan
-        //centralManager = CBCentralManager(delegate: self, queue: nil, options: [CBCentralManagerOptionRestoreIdentifierKey: restoreIdKey,])
-        //centralManager = CBCentralManager(delegate: self, queue: nil, options: nil)
+      
         centralManager = CBCentralManager(delegate: self, queue: DispatchQueue(label: "com.iotCourse.bleq", qos: .userInitiated), options: initOptions)
     }
     
@@ -164,17 +158,6 @@ internal final class BLE_Controller: NSObject, ObservableObject, CBCentralManage
         case .poweredOff, .resetting, .unknown, .unsupported:
             status = .offLine
                 
-        /*if central.state == .poweredOn {
-            // Are we transitioning from BT off to BT ready?
-            print("Powered On")
-            status = .onLine
-            central.scanForPeripherals(withServices: [Cork_Service_CBUUID], options: initOptions)
-            print("SCanning")
-        }
-        if central.state == .poweredOff {
-            // Are we transitioning from BT off to BT ready?
-            status = .offLine
-            print("Powered Off")*/
         case .unauthorized:
             status = .offLine
             
@@ -187,14 +170,6 @@ internal final class BLE_Controller: NSObject, ObservableObject, CBCentralManage
     
     func centralManager(_ central: CBCentralManager, didDiscover peripheral: CBPeripheral, advertisementData: [String : Any], rssi RSSI: NSNumber) {
         os_log("In didDiscoverPeripheral: %s", log: Log.ble, type: .info, peripheral.identifier.uuidString)
-        
-        //Corks.append(Cork_Model(peripheral: peripheral, name: peripheral.name ?? "NoName", type: CMCorkType,  isConnected: false))
-        //Corks.append(Cork_Model(peripheral: peripheral, name: peripheral.name ?? "No Name", type: nil, characteristic: nil, isConnected: false))
-        //print(Cork_Model.init(peripheral: peripheral, name: peripheral.name ?? "No Name", type: nil, characteristic: nil, isConnected: false))
-        
-        //central.stopScan()
-        //print("didDiscover completed...")
-        //print("Cork name ", peripheral)
         
         peripherals.append(peripheral)
         discoveredPeripheral = peripherals[PeripheralCount]
@@ -313,12 +288,6 @@ private func handleEvent(event: BEvent) {
         return retValue
 }
     
-
-//private func save(_ corks: [LastAttachedPeripheral], defaults: UserDefaults) {
-//        let data = corks.map { try? JSONEncoder().encode($0) }
-//    defaults.array(data, forKey: kLastAttachedPeripheralKey)
-//    }
-
 private func load(defaults: UserDefaults) -> [AttachedPeripherals] {
     guard let encodedData = defaults.object(forKey: kLastAttachedPeripheralKey) as? [Data] else {
             return []
@@ -332,10 +301,9 @@ private func load(defaults: UserDefaults) -> [AttachedPeripherals] {
 // MARK: - Public (Internal) API
 //
 func attachPeripheral(suuid: CBUUID, forceScan: Bool = false) {
-    //func attachPeripheral(suuid: CBUUID) {
-    //
+  
     attachingWith = (nil, suuid, false)
-    //cmdQueue.async {self.handleEvent(event: forceScan ? .Retrieve : .Scan) }
+    
     cmdQueue.async {self.handleEvent(event: forceScan ? .Scan : .Retrieve) }  //if TRUE then Scan, if FALSE then Retrieve
 }
     
@@ -360,10 +328,11 @@ func readRssi() {
 
 // MARK: - Actions
 //
-extension BLE_Controller { //This fucntion traces what is going on during development....remove this later if you want too.
+extension BLE_Controller {
 
 // Actions handlers are always passed event and state.  Event always has an associated payload that is extracted and passed.  Other than this Action Handlers are used for debug tracing..the state vaule should not be used in the handler logic. if you start using "if" statement for the state you need to backup and rethink your logic because that is the purose of the state machine,
-
+    
+//This fucntion traces what is going on during development....remove this later if you want too.
 func performNullAction(event: BEvent, state: BState) {
     os_log("Trace: event %s, state: %s", log: Log.ble, type: .info, event.description, state.description)
 }
@@ -585,7 +554,6 @@ fileprivate final class Machine {
                 nilStateError()
                 return
             }
-            //print("savedState....",savedState," - Event.... ",event)
             
             // Execute actions while in the "nil state" state
             // This prevents processing nested events

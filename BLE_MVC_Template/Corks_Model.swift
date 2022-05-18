@@ -9,22 +9,6 @@ import Foundation
 import CoreBluetooth
 import os
 
-enum CMCorkType {
-    case GREEN
-    case RED
-    case YELLOW
-    case BLACK
-    case WHITE
-}
-
-struct Cork_Model {
-    var peripheral: CBPeripheral
-    var name: String
-    var type: CMCorkType? = nil
-    var characteristic: CBCharacteristic? = nil
-    var isConnected: Bool
-}
-
 private let Cork_Service_CBUUID = CBUUID(string: "4FAFC201-1FB5-459E-8FCC-C5C9C3319141")
 
 
